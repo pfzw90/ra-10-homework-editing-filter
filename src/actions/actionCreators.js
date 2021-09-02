@@ -1,16 +1,16 @@
-import { EDIT_ITEM, REMOVE_ITEM, CHANGE_ITEM_FIELD, LOAD_ITEM_DATA, CLEAR_DATA, CHANGE_FILTER, CLEAR_FILTER } from './actionTypes';
+import { EDIT_ITEM, REMOVE_ITEM, CHANGE_ITEM_FIELD, LOAD_ITEM, CLEAR_DATA, CHANGE_FILTER, CLEAR_FILTER, LOAD_SERVICES } from './actionTypes';
 
-export function changeItem(name, price, id = null) {
-    return {type: EDIT_ITEM, payload: {name, price, id}};
+export function changeItem(itemState='idle', data=null) {
+    return {type: EDIT_ITEM, payload: {itemState, data}};
 }
-export function removeItem(id) {
-    return {type: REMOVE_ITEM, payload: id};
+export function deleteItem(itemState='idle', id) {
+    return {type: REMOVE_ITEM, payload: {itemState, id}};
 }
 export function changeItemField(name, value) {
     return {type: CHANGE_ITEM_FIELD, payload: {name, value}}
 }
-export function loadItemData(name, price, id) {
-    return {type: LOAD_ITEM_DATA, payload: {name, price, id}}
+export function loadItem(itemState='idle', data=null) {
+    return {type: LOAD_ITEM, payload: {itemState, data}}
 }
 export function clearData() {
     return {type: CLEAR_DATA, payload: {}}
@@ -20,4 +20,68 @@ export function changeFilter(value) {
 }
 export function clearFilter() {
     return {type: CLEAR_FILTER, payload: {}}
+}
+
+export function loadServices(listState='idle', data=null) {
+    return {type: LOAD_SERVICES, payload: {listState, data}}
+}
+
+export const fetchServices = async dispatch => {
+    dispatch(loadServices('loading'));
+        try {
+        const response = await fetch(process.env.REACT_APP_SERVICES_URL)
+        if (!response.ok) {
+           throw new Error(response.statusText);
+        }
+    const data = await response.json();
+    dispatch(loadServices('idle', data));
+    } catch (e) {
+    dispatch(loadServices(`error: ${e.message}`));
+    }
+}
+
+export const fetchItem = async function (dispatch, id) {
+    dispatch(loadItem('loading'));
+        try {
+        const response = await fetch(process.env.REACT_APP_SERVICES_URL + id)
+        if (!response.ok) {
+           throw new Error(response.statusText);
+        }
+    const data = await response.json();
+    dispatch(loadItem('idle', data));
+    } catch (e) {
+    dispatch(loadItem(`error: ${e.message}`));
+    }
+}
+
+export const removeItem = async function (dispatch, id) {
+    dispatch(deleteItem('loading', id));
+        try {
+        const response = await fetch(process.env.REACT_APP_SERVICES_URL + id, {method: 'DELETE'})
+        if (!response.ok) {
+           throw new Error(response.statusText);
+        }
+    dispatch(deleteItem('removed', id));
+    } catch (e) {
+    dispatch(deleteItem(`error: ${e.message}`, id));
+    }
+}
+
+export const submitItem = async function (dispatch, item) {
+    let error = false;
+    dispatch(loadItem('loading', item));
+        try {
+        const response = await fetch(process.env.REACT_APP_SERVICES_URL, {method: 'POST', body: JSON.stringify(item)})
+        if (!response.ok) {
+           throw new Error(response.statusText);
+        }
+    dispatch(loadItem('idle', item));
+    } catch (e) {
+        error = true;
+        dispatch(loadItem(`error: ${e.message}`, item));
+    } finally {
+    if (item.id === 0 && !error) {
+        dispatch(clearData())
+        fetchServices(dispatch)
+    }}
 }

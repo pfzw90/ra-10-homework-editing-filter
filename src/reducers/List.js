@@ -1,29 +1,33 @@
-import {CHANGE_FILTER, CLEAR_FILTER, EDIT_ITEM, REMOVE_ITEM} from '../actions/actionTypes';
-import shortid from 'shortid';
-
+import {CHANGE_FILTER, CLEAR_FILTER, LOAD_SERVICES, REMOVE_ITEM} from '../actions/actionTypes';
 
 const initialState = {
-    items: [
-        {id: shortid.generate(), name: 'Замена стекла', price: 21000},
-        {id: shortid.generate(), name: 'Замена дисплея', price: 25000}
-    ],
-    filter: ''
+    items: [],
+    filter: '', 
+    listState: 'idle',
 };
 
 export default function ListReducer(state = initialState, action) {
 
     switch (action.type) {
-        case EDIT_ITEM:
-            const {name, price, id } = action.payload;
-            return (id) ? 
-                {...state, items: state.items.map(item => (item.id === id) ? {...item, name, price: Number(price)} : item)} : 
-                {...state, items: [...state.items, {id: shortid.generate(), name, price: Number(price)}]}
+        
         case REMOVE_ITEM:
-            return {...state, items: state.items.filter(item => item.id !== action.payload)};
+            const {itemState} = action.payload
+            if (itemState !== 'removed')
+                return {...state, items: state.items.map(item => (item.id === action.payload.id) ? {...item, itemState} : item)};
+            else
+                return {...state, items: state.items.filter(item => (item.id !== action.payload.id))};
         case CHANGE_FILTER: 
             return {...state, filter: action.payload}
         case CLEAR_FILTER:
             return {...state, filter: ''}
+        case LOAD_SERVICES:
+            const {listState, data} = action.payload;
+            const items = (data) ? data.map(item => {
+                const itemCurrent = state.items.find(i=>i.id === item.id);
+                return {...item, itemState: (itemCurrent) ? itemCurrent.itemState : 'idle'}
+            }) : state.items     
+            return {...state, listState, items}
+        
         default:
             return state;
     }

@@ -1,39 +1,71 @@
 import React from 'react'
-import { loadItemData, removeItem } from '../actions/actionCreators';
+import { useHistory } from 'react-router'; 
+import { removeItem, fetchServices} from '../actions/actionCreators';
 import { connect } from 'react-redux';
-import ItemEdit from './ItemEdit';
+import { useSelector, useDispatch} from 'react-redux';
+import { useEffect } from 'react';
+import Filter from '../components/Filter'
+import AddItem from './AddItem';
 
 function List(props) {
 
-const handleRemove = id => { props.onRemove(id)}
-const handleEdit = (name,price,id) => { 
-    props.onStartEdit(name,price,id) 
+const {items, listState, filter} = useSelector(state => state.list);
+const dispatch = useDispatch();
+const history = useHistory();
+
+useEffect(() => {
+    fetchServices(dispatch)
+}, [dispatch])
+
+const handleRemove = id => {props.onRemove(id)}
+const handleEdit = (id) => { 
+    history.push(`services/${id}`)
 }
 
 return (
-    <ul>
-        {props.list.map(o => 
-            <li key={o.id}>
-            {o.name} {o.price}
-            <button onClick={() => handleEdit(o.name, o.price, o.id)}>✎</button>
-            <button onClick={() => handleRemove(o.id)}>🗑</button>
-            </li>
-        )}
-    </ul>
+    <React.Fragment>
+    <AddItem/>
+    <Filter/>
+    {listState === 'idle' ? 
+        (     
+            <ul className="list">
+            { items.map(o => 
+                {            
+                const loading = (o.itemState === 'loading')
+                return (!filter.length || (filter.length && o.name.includes(filter))) ? (
+                    <li key={o.id}>
+                        {o.name} {o.price}
+                        <div>
+                            <button onClick={() => handleEdit(o.id)} disabled={loading} className="submit-button">✎</button>
+                            <button onClick={() => handleRemove(o.id)} className={`cancel-button ${loading && "loading"}`} disabled={loading}>
+                                <div className="button-text">🗑</div>
+                            </button>
+                        </div>
+                        {o.itemState.startsWith('error') && <span className="error">{o.itemState}</span>}
+                    </li>
+                ) : null;                  
+            })
+            }
+            </ul>
+        ) : 
+        ((listState === 'loading') ? (<div className="loading">Loading..</div>) : (<div className="error">{listState}</div>))       
+    }
+    </React.Fragment>
  )
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { items, filter } = state.list;
+    const {list: {items, listState, filter}} = state;
     return {
-        list: (filter.length) ? items.filter((item) => item.name.includes(filter)) : items
+        list: (filter.length) ? items.filter((item) => item.name.includes(filter)) : items,
+        listState
     };
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => {
 return {
-    onRemove: (id) => dispatch(removeItem(id)),
-    onStartEdit: (name, price ,id) => dispatch(loadItemData(name, price ,id))
+    fetchServices: () => fetchServices(dispatch),
+    onRemove: (id) => removeItem(dispatch, id),
     }
 };
 
