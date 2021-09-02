@@ -1,21 +1,15 @@
 import './App.css';
 import List from './components/List'
-import EditItem from './components/EditItem';
+import ItemEdit from './components/ItemEdit';
+import Filter from './components/Filter';
 import React from 'react';
-import {BrowserRouter as Router, Route, Redirect} from 'react-router-dom'
 
 function App() {
   return (
-   
     <React.Fragment>
-       <Router>
-        <Route exact path="/">
-            <Redirect to="/services"/>
-        </Route>
-        <Route path="/services/:id" component={EditItem}/>
-        <Route exact path="/services" component={List}/>
-        
-      </Router>
+      <ItemEdit/>
+      <Filter/>
+      <List/>
     </React.Fragment>
   );
 }

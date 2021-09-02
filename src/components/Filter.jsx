@@ -14,23 +14,23 @@ function Filter(props) {
     }
 
     return ( 
-    <form className="filter">
+    <form >
         <input name='namefilter' onChange={handleChange} value={props.filter.value} />
-        <button type="reset" onClick={handleClear} className="cancel-button">Clear</button>
+        <button type="reset" onClick={handleClear}>Clear</button>
     </form>
     )
 }
 
-const mapStateToProps = (state) => {
-    const { filter } = state;
-    return { filter : filter };
-}
-
-const mapDispatchToProps = (dispatch, ownProps) => {
-return {
-    onChange: (value) => dispatch(changeFilter(value)),
-    onClear: () => dispatch(clearFilter())
+    const mapStateToProps = (state) => {
+        const { filter } = state;
+        return { filter : filter };
     }
-};
 
-export default connect(mapStateToProps, mapDispatchToProps)(Filter)
+    const mapDispatchToProps = (dispatch, ownProps) => {
+    return {
+        onChange: (value) => dispatch(changeFilter(value)),
+        onClear: () => dispatch(clearFilter())
+        }
+    };
+
+    export default connect(mapStateToProps, mapDispatchToProps)(Filter)
